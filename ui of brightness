@@ -1,0 +1,51 @@
+import sys
+from PyQt6.QtWidgets import QApplication, QWidget, QDial, QVBoxLayout, QLabel
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont, QGuiApplication
+
+class BrightnessOSD(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setFixedSize(300, 180)
+
+        layout = QVBoxLayout()
+
+        self.label = QLabel("65...", self)
+        self.label.setFont(QFont("Monospace", 26))
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+
+        self.dial = QDial(self)
+        self.dial.setRange(0, 100)
+        layout.addWidget(self.dial)
+
+        self.setLayout(layout)
+
+        # Move to top right corner of screen
+        screen = QGuiApplication.primaryScreen().geometry()
+        x = screen.width() - self.width() - 20
+        y = 20
+        self.move(x, y)
+
+        self.brightness_timer = QTimer()
+        self.brightness_timer.setSingleShot(True)
+        self.brightness_timer.timeout.connect(self.send_brightness)
+        self.pending_brightness = None
+
+        self.dial.valueChanged.connect(self.on_value_change)
+
+    def on_value_change(self, value):
+        self.label.setText(str(value))
+        self.pending_brightness = value
+        self.brightness_timer.start(200)
+
+    def send_brightness(self):
+        print("Set brightness to:", self.pending_brightness)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = BrightnessOSD()
+    window.show()
+    sys.exit(app.exec())
+
